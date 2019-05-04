@@ -463,49 +463,162 @@
             
             list(topMovies);
         
-        /*--------------------------------------------------------Visualization 1--------------------------------------------------------*/
+        /*--------------------------------------------------------Visualization 2--------------------------------------------------------*/
             
 
-            console.log(data)
-
-            var svg2 = d3.select("#svg2")
-
-
-            //determines the specific genre that we are looking at v
-            var genre = "Action"
-
-
-
-            //create the circle that shows all the genres and production companies/movies 
-            svg2.append("circle")
-                .attr("cx", 400)
-                .attr("cy", 400)
-                .attr("r", 300)
-                .attr("stroke", "black")
-                .attr("stroke-width", "3px")
-                .style("fill", "none")
-
-            //Create a list of production companies 
+            console.log(data, "visu2")
+            var svg2 = d3.select("#svg2");
+            var w = parseInt(svg2.style("width")),
+                h = parseInt(svg2.style("height"));
+            
+            var years = [2001,2002,2003,2004,2005,2006,2007],
+                margins = {left: 50, top: 50, bottom: 80, right: 50},
+                first = years[0],
+                last = years[years.length - 1],
+                xScale = d3
+                    .scaleLinear()
+                    .domain([first, last])
+                    .range([0, w - margins.right - margins.left])
+                    .clamp(true);
+            
+            var slider_g = svg2.append('g').attr('class', 'slider-g').attr('transform', `translate(${margins.left}, ${h - margins.bottom})`);
+            var axis_g = slider_g.append('g');
+            axis_g
+                .call(
+                d3
+                    .axisBottom()
+                    .scale(xScale)
+                    .ticks(years.length)
+                    .tickFormat(d3.format(''))
+                )
+                .selectAll('text')
+                .style('opacity', d => (d == first || d == last ? 1 : 0))
+                .style('font-size', '16pt')
+                .style('font-weight', 'bold')                
+                .attr('dy', '1.5em')
+                // .select('.domain').remove();
         
-            var productionCompanies = []
-            data.forEach( (d,i) => {
-                let movieInfo = d['production_companies']
-                for (iter in movieInfo) {
-                    var inArray = "no"
+            axis_g
+                .selectAll('line')
+                .attr('opacity', 0)
+            axis_g
+                .select('path')
+                .style('d', 'none');
+            axis_g
+                .select('path')
+                .style('stroke', 'white');
+            axis_g
+                .select('path')
+                .style('opacity', '1');            
+            axis_g
+                .append('rect')
+                .attr('class', 'sliderBar')
+                .attr('rx', 5)
+                .attr('ry', 5)
+                .attr('width', w - margins.left - margins.right)
+                .attr('height', 10)                
+                .attr('fill', 'grey');
+            
+            var handler_g = slider_g.append('g')
+                .attr('class', 'handler')
+                .attr('transform', `translate(0, 5)`)
 
-                    for (j in productionCompanies) {
-                        if (productionCompanies[j] == movieInfo[iter]["name"]) {
-                            inArray = "yes"
-                        }
-                    }
-                    if (inArray == "no") {
-                         productionCompanies.push(movieInfo[iter]["name"])
-                    }
-                }
+            var handler_circle = handler_g
+                .append('circle')
+                .attr('class', 'handler_circle')
+                .attr('r', 10)
+                .attr('fill', '#f5a623')
+            
+            const drag = d3
+                .drag()
+                .on('start', dragstart)
+                .on('drag', dragged)
+                .on('end', dragend);
 
-            })
+            handler_g.call(drag);
+            var mouseValue;
+            function dragstart() {
+                console.log('dragged')
+            }
+            function dragged() {
+                mouseValue = d3.mouse(this)[0];
+          trueMouseValue = getTrueMouseValue(mouseValue);
+          if (mouseValue > margins.left && mouseValue < svgDimen.width - margins.right) {
+            d3.select('.' + handle).attr('transform', 'translate(' + mouseValue + ', 19)');
+            d3.select('.' + handle)
+              .select('text')
+              .attr('dominant-baseline', 'middle')
+              .attr('dy', -15)
+              .style('text-anchor', 'middle')
+              .text(trueMouseValue);
+          }
+            }
+            function dragend() {
 
-             console.log(productionCompanies)
+            }
+            function getTrueMouseValue(mouseValue) {
+                return Math.round(xScale.invert(mouseValue));
+            }
+            //draw pie chart
+            // var radius = Math.min(w * 0.7, h * 0.7);
+            // var pie_g = svg2.append("g").attr('class', 'pie_g').attr('transform', `translate(${w/2}, ${h/2})`);
+
+            // var createPie = d3.pie()
+            //     .startAngle(0)
+            //     .endAngle(2 * Math.PI)
+            //     .value(d => d.value)
+            //     .sort(null);
+            // var createArc = d3
+            //     .arc()
+            //     .innerRadius(radius * 0.3)
+            //     .outerRadius(radius);
+            
+            // var curData = createPie(data.values);
+            // var arc_path = pie_g.append('path').attr('class', 'arc_path');
+            // arc_path
+            //     .attr("class", "arc")
+            //     // .on("mouseover", (d) => {
+            //     //     tooltip.attr('transform', "translate(" + createLabelArc.centroid(d) + ")").call(callout, d);
+            //     //     tooltip.raise();
+            //     // })
+            //     // .on("mouseout", () => tooltip.call(callout, null))
+            //     .attr("fill", d => d.data.color)
+            //     .attr('stroke', '#fff')
+            //     .attr('d', createArc(curData))
+            // //determines the specific genre that we are looking at v
+            // var genre = "Action"
+
+
+
+            // //create the circle that shows all the genres and production companies/movies 
+            // svg2.append("circle")
+            //     .attr("cx", 400)
+            //     .attr("cy", 400)
+            //     .attr("r", 300)
+            //     .attr("stroke", "black")
+            //     .attr("stroke-width", "3px")
+            //     .style("fill", "none")
+
+            // //Create a list of production companies 
+        
+            // var productionCompanies = []
+            // data.forEach( (d,i) => {
+            //     let movieInfo = d['production_companies']
+            //     for (iter in movieInfo) {
+            //         var inArray = "no"
+
+            //         for (j in productionCompanies) {
+            //             if (productionCompanies[j] == movieInfo[iter]["name"]) {
+            //                 inArray = "yes"
+            //             }
+            //         }
+            //         if (inArray == "no") {
+            //              productionCompanies.push(movieInfo[iter]["name"])
+            //         }
+            //     }
+
+            // })
+            //  console.log(productionCompanies)
 
            
 
